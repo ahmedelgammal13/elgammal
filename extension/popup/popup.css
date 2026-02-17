@@ -1,0 +1,20 @@
+body {
+  width: 300px;
+  padding: 16px;
+  font-family: Arial, sans-serif;
+  margin: 0;
+}
+
+#app {
+  text-align: center;
+}
+
+h1 {
+  font-size: 18px;
+  margin: 0 0 8px;
+}
+
+p {
+  font-size: 14px;
+  color: #555;
+}
