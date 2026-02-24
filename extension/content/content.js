@@ -14,9 +14,6 @@
   // Content-type detection
   // ==========================================================================
 
-  /**
-   * Infer content type from the current page URL.
-   */
   function detectContentTypeFromUrl() {
     const path = window.location.pathname;
 
@@ -30,14 +27,9 @@
     return "other";
   }
 
-  /**
-   * Infer content type by walking up from the element that was clicked to find
-   * structural hints in ancestor elements.
-   */
   function detectContentTypeFromContainer(element) {
     if (!element) return detectContentTypeFromUrl();
 
-    // Job containers carry data-job-id or live under known landmark wrappers.
     if (
       element.closest("[data-job-id]") ||
       element.closest("[data-view-name*='job']")
@@ -45,7 +37,6 @@
       return "job";
     }
 
-    // Article / blog post URNs
     if (
       element.closest("[data-urn*='article']") ||
       element.closest("[data-urn*='blogPost']") ||
@@ -54,7 +45,6 @@
       return "article";
     }
 
-    // LinkedIn Learning
     if (
       element.closest("[data-urn*='learning']") ||
       element.closest("[data-resource-type='COURSE']") ||
@@ -63,7 +53,6 @@
       return "course";
     }
 
-    // Feed posts — activity / ugcPost URNs
     if (
       element.closest("[data-urn*='activity']") ||
       element.closest("[data-urn*='ugcPost']")
@@ -79,53 +68,42 @@
   // ==========================================================================
 
   function extractJobTitle() {
-    // Job detail pages typically surface the title in a prominent heading.
-    const heading = document.querySelector(
+    var heading = document.querySelector(
       "h1[class*='job'], h1[class*='top-card'], h1"
     );
     return heading ? heading.textContent.trim() : "";
   }
 
   function extractJobUrl() {
-    const match = window.location.href.match(/(\/jobs\/view\/\d+)/);
+    var match = window.location.href.match(/(\/jobs\/view\/\d+)/);
     return match
       ? "https://www.linkedin.com" + match[1]
       : window.location.href;
   }
 
   function extractArticleTitle() {
-    const heading = document.querySelector("article h1, h1");
+    var heading = document.querySelector("article h1, h1");
     return heading ? heading.textContent.trim() : "";
   }
 
   function extractCourseTitle() {
-    const heading = document.querySelector("h1");
+    var heading = document.querySelector("h1");
     return heading ? heading.textContent.trim() : "";
   }
 
-  /**
-   * For feed posts the "title" is synthesised from the author name and a text
-   * snippet. We walk up from the trigger element to find the enclosing post.
-   */
   function extractPostText(trigger) {
-    const post = trigger
-      ? trigger.closest("[data-urn]")
-      : null;
-
+    var post = trigger ? trigger.closest("[data-urn]") : null;
     if (!post) return "";
 
-    // Author — look for the first anchor whose href points to a profile.
-    const actorLink = post.querySelector(
+    var actorLink = post.querySelector(
       'a[href*="/in/"] span[dir="ltr"], a[href*="/company/"] span[dir="ltr"]'
     );
-    const actorName = actorLink ? actorLink.textContent.trim() : "";
+    var actorName = actorLink ? actorLink.textContent.trim() : "";
 
-    // Text body — LinkedIn wraps post text in a span with dir="ltr" inside a
-    // container with data-urn on the post level.
-    const textContainer = post.querySelector(
+    var textContainer = post.querySelector(
       'span[dir="ltr"].break-words, [data-urn] [dir="ltr"]'
     );
-    const snippet = textContainer
+    var snippet = textContainer
       ? textContainer.textContent.trim().slice(0, 120)
       : "";
 
@@ -135,11 +113,11 @@
   }
 
   function extractPostUrl(trigger) {
-    const post = trigger ? trigger.closest("[data-urn]") : null;
+    var post = trigger ? trigger.closest("[data-urn]") : null;
 
     if (post) {
-      const urn = post.getAttribute("data-urn") || "";
-      const activityMatch = urn.match(/urn:li:(activity|ugcPost):(\d+)/);
+      var urn = post.getAttribute("data-urn") || "";
+      var activityMatch = urn.match(/urn:li:(activity|ugcPost):(\d+)/);
       if (activityMatch) {
         return (
           "https://www.linkedin.com/feed/update/urn:li:" +
@@ -151,21 +129,17 @@
       }
     }
 
-    // Fall back to finding a permalink anchor inside the post.
     if (post) {
-      const link = post.querySelector('a[href*="/feed/update/"]');
+      var link = post.querySelector('a[href*="/feed/update/"]');
       if (link) return link.href.split("?")[0];
     }
 
     return window.location.href;
   }
 
-  /**
-   * Build a metadata object from the context surrounding a save action.
-   */
   function extractMetadata(triggerElement) {
-    const contentType = detectContentTypeFromContainer(triggerElement);
-    const metadata = {
+    var contentType = detectContentTypeFromContainer(triggerElement);
+    var metadata = {
       contentType: contentType,
       url: window.location.href,
       title: "",
@@ -191,7 +165,6 @@
         break;
     }
 
-    // Final fallback: strip the LinkedIn suffix from document.title.
     if (!metadata.title) {
       metadata.title =
         document.title.replace(/\s*[|\u2013\u2014].*$/, "").trim() ||
@@ -205,27 +178,19 @@
   // Save-button recognition
   // ==========================================================================
 
-  /**
-   * Walk a small ancestor chain from `el` and return the first element whose
-   * aria-label or text content signals a *save* (not *unsave*) action.
-   * Returns the matching element, or null.
-   */
   function findSaveAnchor(el) {
-    let current = el;
-    for (let depth = 0; depth < 5 && current; depth++) {
-      // --- aria-label ---------------------------------------------------
-      const ariaLabel = (current.getAttribute("aria-label") || "").trim();
+    var current = el;
+    for (var depth = 0; depth < 5 && current; depth++) {
+      var ariaLabel = (current.getAttribute("aria-label") || "").trim();
       if (/^save\b/i.test(ariaLabel)) return current;
 
-      // --- data-control-name --------------------------------------------
-      const controlName = current.getAttribute("data-control-name") || "";
+      var controlName = current.getAttribute("data-control-name") || "";
       if (/save/i.test(controlName) && !/unsave/i.test(controlName)) {
         return current;
       }
 
-      // --- role="menuitem" or button with exact "Save" text -------------
-      const tag = current.tagName;
-      const role = current.getAttribute("role");
+      var tag = current.tagName;
+      var role = current.getAttribute("role");
       if (
         (tag === "BUTTON" ||
           tag === "LI" ||
@@ -242,14 +207,12 @@
     return null;
   }
 
-  /**
-   * Returns true when `el` is (or is inside) an *unsave* button so we can
-   * ignore those clicks.
-   */
   function isUnsaveAction(el) {
-    let current = el;
-    for (let depth = 0; depth < 5 && current; depth++) {
-      const ariaLabel = (current.getAttribute("aria-label") || "").toLowerCase();
+    var current = el;
+    for (var depth = 0; depth < 5 && current; depth++) {
+      var ariaLabel = (
+        current.getAttribute("aria-label") || ""
+      ).toLowerCase();
       if (/unsave|saved/i.test(ariaLabel)) return true;
       if (/^\s*unsave\s*$/i.test(current.textContent)) return true;
       current = current.parentElement;
@@ -258,15 +221,376 @@
   }
 
   // ==========================================================================
+  // Background messaging
+  // ==========================================================================
+
+  function sendToBackground(action, data) {
+    return new Promise(function (resolve, reject) {
+      chrome.runtime.sendMessage(
+        { type: action, payload: data },
+        function (response) {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
+          }
+          if (response && response.error) {
+            reject(new Error(response.error));
+            return;
+          }
+          resolve(response ? response.data : null);
+        }
+      );
+    });
+  }
+
+  // ==========================================================================
+  // Toast notification
+  // ==========================================================================
+
+  function showToast(message, type) {
+    var existing = document.querySelector(".lh-toast");
+    if (existing) existing.remove();
+
+    var toast = document.createElement("div");
+    toast.className = "lh-toast lh-toast--" + type;
+
+    var icon =
+      type === "success"
+        ? '<svg class="lh-toast__icon" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        : '<svg class="lh-toast__icon" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 4.5v4M8 10.5v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+
+    toast.innerHTML = icon + '<span class="lh-toast__text"></span>';
+    toast.querySelector(".lh-toast__text").textContent = message;
+    document.body.appendChild(toast);
+
+    // Trigger reflow then animate in.
+    toast.offsetHeight; // eslint-disable-line no-unused-expressions
+    toast.classList.add("lh-toast--visible");
+
+    setTimeout(function () {
+      toast.classList.remove("lh-toast--visible");
+      setTimeout(function () {
+        toast.remove();
+      }, 300);
+    }, 3000);
+  }
+
+  // ==========================================================================
+  // Popup overlay
+  // ==========================================================================
+
+  var activePopup = null;
+
+  function dismissPopup() {
+    if (!activePopup) return;
+    var el = activePopup;
+    el.classList.remove("lh-backdrop--visible");
+    setTimeout(function () {
+      el.remove();
+    }, 200);
+    activePopup = null;
+  }
+
+  function positionPopup(popup, triggerElement) {
+    if (!triggerElement || !triggerElement.getBoundingClientRect) {
+      popup.style.position = "fixed";
+      popup.style.top = "50%";
+      popup.style.left = "50%";
+      popup.style.transform = "translate(-50%, -50%)";
+      return;
+    }
+
+    var rect = triggerElement.getBoundingClientRect();
+    var popupWidth = 368;
+    var popupEstHeight = 440;
+    var gap = 8;
+
+    var top = rect.bottom + gap;
+    var left = rect.left;
+
+    if (top + popupEstHeight > window.innerHeight) {
+      top = Math.max(gap, rect.top - popupEstHeight - gap);
+    }
+    if (left + popupWidth > window.innerWidth) {
+      left = window.innerWidth - popupWidth - gap;
+    }
+    if (left < gap) left = gap;
+
+    popup.style.position = "fixed";
+    popup.style.top = top + "px";
+    popup.style.left = left + "px";
+    popup.style.transform = "none";
+  }
+
+  // Build the inner HTML for the popup panel.
+  function buildPopupHTML(metadata, isDuplicate) {
+    var CONTENT_TYPES = ["article", "post", "course", "job", "other"];
+    var options = CONTENT_TYPES.map(function (t) {
+      var selected = t === metadata.contentType ? " selected" : "";
+      return (
+        '<option value="' +
+        t +
+        '"' +
+        selected +
+        ">" +
+        t.charAt(0).toUpperCase() +
+        t.slice(1) +
+        "</option>"
+      );
+    }).join("");
+
+    var duplicateWarning = isDuplicate
+      ? '<div class="lh-popup__warning">' +
+        '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1l7 13H1L8 1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 6v3M8 11v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>' +
+        " This URL has already been saved.</div>"
+      : "";
+
+    return (
+      '<div class="lh-popup__header">' +
+      '<svg class="lh-popup__header-icon" width="18" height="18" viewBox="0 0 16 16" fill="none">' +
+      '<path d="M3 2.5A1.5 1.5 0 014.5 1h7A1.5 1.5 0 0113 2.5v12l-5-3-5 3v-12z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>' +
+      "</svg>" +
+      '<span class="lh-popup__header-text">Save to LinkedIn Helper</span>' +
+      '<button class="lh-popup__close" id="lh-close" aria-label="Close">&times;</button>' +
+      "</div>" +
+      duplicateWarning +
+      '<div class="lh-popup__body">' +
+      '<label class="lh-popup__label" for="lh-title">Title</label>' +
+      '<input class="lh-popup__input" id="lh-title" type="text" />' +
+      '<label class="lh-popup__label" for="lh-type">Content Type</label>' +
+      '<select class="lh-popup__select" id="lh-type">' +
+      options +
+      "</select>" +
+      '<label class="lh-popup__label">Tags</label>' +
+      '<div class="lh-popup__tags-wrap">' +
+      '<div class="lh-popup__chips" id="lh-chips"></div>' +
+      '<input class="lh-popup__tag-input" id="lh-tag-input" type="text" placeholder="Type and press Enter" />' +
+      '<div class="lh-popup__autocomplete" id="lh-ac"></div>' +
+      "</div>" +
+      '<label class="lh-popup__label" for="lh-notes">Notes <span class="lh-popup__optional">(optional)</span></label>' +
+      '<textarea class="lh-popup__textarea" id="lh-notes" rows="2" placeholder="Add a note\u2026"></textarea>' +
+      "</div>" +
+      '<div class="lh-popup__footer">' +
+      '<button class="lh-popup__btn lh-popup__btn--cancel" id="lh-cancel">Cancel</button>' +
+      '<button class="lh-popup__btn lh-popup__btn--save" id="lh-save">Save</button>' +
+      "</div>"
+    );
+  }
+
+  /**
+   * Show the save-item popup near `triggerElement`.
+   */
+  async function showPopup(metadata, triggerElement) {
+    // Only one popup at a time.
+    if (activePopup) dismissPopup();
+
+    // --- Pre-flight: duplicate check + existing tags (in parallel) --------
+    var isDuplicate = false;
+    var existingTags = [];
+    try {
+      var results = await Promise.all([
+        sendToBackground("GET_ITEMS", {}),
+        sendToBackground("GET_ALL_TAGS", {}),
+      ]);
+      isDuplicate = results[0].some(function (item) {
+        return item.url === metadata.url;
+      });
+      existingTags = results[1] || [];
+    } catch (e) {
+      console.warn(PREFIX + " Pre-flight check failed:", e.message);
+    }
+
+    // --- Build DOM --------------------------------------------------------
+    var backdrop = document.createElement("div");
+    backdrop.className = "lh-backdrop";
+
+    var popup = document.createElement("div");
+    popup.className = "lh-popup";
+    popup.setAttribute("role", "dialog");
+    popup.setAttribute("aria-label", "Save item");
+    popup.innerHTML = buildPopupHTML(metadata, isDuplicate);
+
+    // Set title value via property (safe for special chars).
+    popup.querySelector("#lh-title").value = metadata.title;
+
+    backdrop.appendChild(popup);
+    document.body.appendChild(backdrop);
+    activePopup = backdrop;
+
+    positionPopup(popup, triggerElement);
+
+    // Animate in.
+    requestAnimationFrame(function () {
+      backdrop.classList.add("lh-backdrop--visible");
+    });
+
+    // --- Tag chip state ---------------------------------------------------
+    var tags = [];
+    var chipsEl = popup.querySelector("#lh-chips");
+    var tagInput = popup.querySelector("#lh-tag-input");
+    var acEl = popup.querySelector("#lh-ac");
+
+    function renderChips() {
+      chipsEl.innerHTML = "";
+      tags.forEach(function (t, idx) {
+        var chip = document.createElement("span");
+        chip.className = "lh-popup__chip";
+        chip.textContent = t;
+
+        var rm = document.createElement("button");
+        rm.className = "lh-popup__chip-rm";
+        rm.type = "button";
+        rm.textContent = "\u00d7";
+        rm.setAttribute("aria-label", "Remove tag " + t);
+        rm.addEventListener("click", function () {
+          tags.splice(idx, 1);
+          renderChips();
+          tagInput.focus();
+        });
+        chip.appendChild(rm);
+        chipsEl.appendChild(chip);
+      });
+    }
+
+    function addTag(val) {
+      var clean = val.trim().toLowerCase().slice(0, 50);
+      if (!clean || tags.includes(clean)) return;
+      tags.push(clean);
+      renderChips();
+      tagInput.value = "";
+      hideAC();
+    }
+
+    function showAC(filter) {
+      var lower = filter.toLowerCase();
+      var matches = existingTags
+        .filter(function (t) {
+          return (
+            t.toLowerCase().startsWith(lower) &&
+            !tags.includes(t.toLowerCase())
+          );
+        })
+        .slice(0, 6);
+
+      if (!matches.length) {
+        hideAC();
+        return;
+      }
+
+      acEl.innerHTML = "";
+      matches.forEach(function (m) {
+        var opt = document.createElement("div");
+        opt.className = "lh-popup__ac-option";
+        opt.textContent = m;
+        opt.addEventListener("mousedown", function (e) {
+          e.preventDefault(); // prevent input blur
+          addTag(m);
+        });
+        acEl.appendChild(opt);
+      });
+      acEl.classList.add("lh-popup__autocomplete--visible");
+    }
+
+    function hideAC() {
+      acEl.classList.remove("lh-popup__autocomplete--visible");
+      acEl.innerHTML = "";
+    }
+
+    tagInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        addTag(tagInput.value);
+      } else if (
+        e.key === "Backspace" &&
+        !tagInput.value &&
+        tags.length > 0
+      ) {
+        tags.pop();
+        renderChips();
+      }
+    });
+
+    tagInput.addEventListener("input", function () {
+      var v = tagInput.value.trim();
+      if (v) {
+        showAC(v);
+      } else {
+        hideAC();
+      }
+    });
+
+    tagInput.addEventListener("blur", function () {
+      setTimeout(hideAC, 150);
+    });
+
+    // --- Dismiss handlers -------------------------------------------------
+    popup.querySelector("#lh-close").addEventListener("click", dismissPopup);
+    popup.querySelector("#lh-cancel").addEventListener("click", dismissPopup);
+
+    backdrop.addEventListener("click", function (e) {
+      if (e.target === backdrop) dismissPopup();
+    });
+
+    document.addEventListener(
+      "keydown",
+      function onEsc(e) {
+        if (e.key === "Escape") {
+          dismissPopup();
+          document.removeEventListener("keydown", onEsc);
+        }
+      }
+    );
+
+    // --- Save handler -----------------------------------------------------
+    popup.querySelector("#lh-save").addEventListener("click", async function () {
+      var saveBtn = popup.querySelector("#lh-save");
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving\u2026";
+
+      var title =
+        popup.querySelector("#lh-title").value.trim() || "Untitled";
+      var contentType = popup.querySelector("#lh-type").value;
+      var notes = popup.querySelector("#lh-notes").value.trim();
+
+      var item = {
+        title: title,
+        url: metadata.url,
+        contentType: contentType,
+        tags: tags.filter(function (t) {
+          return t.length > 0;
+        }),
+        notes: notes || "",
+      };
+
+      try {
+        await sendToBackground("SAVE_ITEM", item);
+        dismissPopup();
+        showToast("Saved to LinkedIn Helper!", "success");
+        console.log(PREFIX + " Item saved:", item);
+      } catch (err) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Save";
+        showToast("Failed to save: " + err.message, "error");
+        console.error(PREFIX + " Save failed:", err);
+      }
+    });
+
+    // Focus the title input after the animation settles.
+    setTimeout(function () {
+      popup.querySelector("#lh-title").focus();
+    }, 120);
+  }
+
+  // ==========================================================================
   // Core handler — called by every detection strategy
   // ==========================================================================
 
   function handleSaveDetected(triggerElement, source) {
-    const now = Date.now();
+    var now = Date.now();
     if (now - lastSaveTimestamp < DEBOUNCE_MS) return;
     lastSaveTimestamp = now;
 
-    const metadata = extractMetadata(triggerElement);
+    var metadata = extractMetadata(triggerElement);
 
     console.log(PREFIX + " Save detected (" + source + ")", metadata);
     console.table({
@@ -276,15 +600,7 @@
       detectedAt: metadata.detectedAt,
     });
 
-    // Forward to background service worker.
-    try {
-      chrome.runtime.sendMessage({
-        type: "SAVE_DETECTED",
-        payload: metadata,
-      });
-    } catch (err) {
-      console.warn(PREFIX + " Could not message background:", err.message);
-    }
+    showPopup(metadata, triggerElement);
   }
 
   // ==========================================================================
@@ -294,7 +610,9 @@
   document.addEventListener(
     "click",
     function (event) {
-      // Ignore unsave clicks.
+      // Ignore clicks inside our own popup.
+      if (event.target.closest && event.target.closest(".lh-popup")) return;
+
       if (isUnsaveAction(event.target)) return;
 
       var anchor = findSaveAnchor(event.target);
@@ -302,7 +620,7 @@
         handleSaveDetected(anchor, "click");
       }
     },
-    true // capture phase — fires before LinkedIn's own handlers
+    true
   );
 
   // ==========================================================================
@@ -313,8 +631,6 @@
     for (var i = 0; i < mutations.length; i++) {
       var mutation = mutations[i];
 
-      // 2a. Attribute change: aria-label toggling from "Save …" → "Unsave …"
-      //     This is the strongest confirmation that a save actually succeeded.
       if (
         mutation.type === "attributes" &&
         mutation.attributeName === "aria-label"
@@ -332,21 +648,27 @@
           console.log(
             PREFIX + " Save confirmed via aria-label flip:",
             oldVal,
-            "→",
+            "\u2192",
             newVal
           );
           handleSaveDetected(mutation.target, "aria-label-flip");
         }
       }
 
-      // 2b. New child nodes: look for toast/snackbar confirmations.
       if (mutation.type === "childList") {
         for (var j = 0; j < mutation.addedNodes.length; j++) {
           var node = mutation.addedNodes[j];
           if (node.nodeType !== Node.ELEMENT_NODE) continue;
 
-          // LinkedIn renders save-confirmation toasts inside
-          // `.artdeco-toast-item` elements.
+          // Skip nodes created by our own extension.
+          if (
+            node.classList &&
+            (node.classList.contains("lh-toast") ||
+              node.classList.contains("lh-backdrop"))
+          ) {
+            continue;
+          }
+
           var toast =
             node.matches && node.matches(".artdeco-toast-item")
               ? node
@@ -365,9 +687,6 @@
                 PREFIX + " Save confirmed via toast:",
                 toast.textContent.trim()
               );
-              // Toast confirmations don't have a clear trigger element, so
-              // we pass null and let extractMetadata fall back to page-level
-              // heuristics.
               handleSaveDetected(null, "toast");
             }
           }
@@ -376,8 +695,6 @@
     }
   });
 
-  // Wait for body to be available (it should be by the time content scripts
-  // run, but guard just in case).
   function startObserver() {
     if (!document.body) {
       document.addEventListener("DOMContentLoaded", startObserver);
@@ -398,9 +715,6 @@
   // ==========================================================================
   // Strategy 3 — Intercept dropdown menu items as they appear
   // ==========================================================================
-  // LinkedIn lazily renders dropdown menus. A second MutationObserver watches
-  // for newly-inserted menu items whose text is "Save" and attaches a one-shot
-  // click listener so we catch saves even when the menu structure changes.
 
   var menuObserver = new MutationObserver(function (mutations) {
     for (var i = 0; i < mutations.length; i++) {
@@ -411,7 +725,6 @@
         var node = mutation.addedNodes[j];
         if (node.nodeType !== Node.ELEMENT_NODE) continue;
 
-        // Look for dropdown / popover containers.
         var menuItems = [];
         if (node.querySelectorAll) {
           menuItems = node.querySelectorAll(
@@ -423,7 +736,6 @@
           var item = menuItems[k];
           var text = item.textContent.trim().toLowerCase();
           if (text === "save") {
-            // Tag it so we don't attach duplicate listeners.
             if (item.dataset.lhSaveTracked) continue;
             item.dataset.lhSaveTracked = "true";
 
